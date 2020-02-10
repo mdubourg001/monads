@@ -1,0 +1,13 @@
+{
+  "name": "monad",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.7.5"
+  },
+  "scripts": {
+    "start": "tsnd --respawn --clear index.ts"
+  }
+}
