@@ -1,10 +1,5 @@
 abstract class Monad<T> {
   protected value: T;
-
-  abstract of(val: T): Monad<T>;
-  abstract map<B>(f: (val: T) => B): Monad<T | B>;
-  abstract equals(m: Monad<T>): boolean;
-  abstract toString(): string;
 }
 
 // -----
@@ -27,10 +22,6 @@ class Maybe<T> extends Monad<T> {
 
   static of<T>(val: T): Maybe<T> {
     return Maybe.Just(val);
-  }
-
-  of(val: T): Maybe<T> {
-    return Maybe.of(val);
   }
 
   map<B>(f: (val: T) => B): Maybe<T | B> {
@@ -84,10 +75,6 @@ class Either<T> extends Monad<T> {
     return new Either(val);
   }
 
-  of(val: T): Either<T> {
-    return Either.of(val);
-  }
-
   map<B>(f: (val: T) => B): Either<T | B> {
     return this.t === EitherType.Left ? this : new Either(f(this.value));
   }
@@ -123,7 +110,37 @@ class Either<T> extends Monad<T> {
   }
 }
 
+// -----
+// io monad
+// -----
+
+type Effect<T> = () => T;
+
+class IO<T> extends Monad<Effect<T>> {
+  constructor(val: Effect<T>) {
+    super();
+    this.value = val;
+  }
+
+  static of<T>(val: Effect<T>): IO<T> {
+    return new IO(val);
+  }
+
+  map<B>(f: (val: T) => B): IO<B> {
+    return new IO(() => f(this.value()));
+  }
+
+  eval(): T {
+    return this.value();
+  }
+
+  toString(): string {
+    return `IO ${typeof this.value}`;
+  }
+}
+
 export default {
   Maybe,
-  Either
+  Either,
+  IO
 };
