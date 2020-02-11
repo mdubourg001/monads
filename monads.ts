@@ -41,7 +41,7 @@ class Maybe<T> extends Monad<T> {
   }
 
   toString(): string {
-    return this.isNothing() ? "Nothing" : `Just ${this.value}`;
+    return this.isNothing() ? 'Nothing' : `Just ${this.value}`;
   }
 }
 
@@ -50,8 +50,8 @@ class Maybe<T> extends Monad<T> {
 // -----
 
 enum EitherType {
-  Left = "Left",
-  Right = "Right"
+  Left = 'Left',
+  Right = 'Right',
 }
 
 class Either<T> extends Monad<T> {
@@ -127,7 +127,19 @@ class IO<T> extends Monad<Effect<T>> {
   }
 
   map<B>(f: (val: T) => B): IO<B> {
-    return new IO(() => f(this.value()));
+    return new IO(() => f(this.eval()));
+  }
+
+  asyncMap<B>(f: (val: T) => Promise<B>): IO<Promise<B>> {
+    return new IO(async () => f(await this.eval()));
+  }
+
+  flatMap<B>(f: (val: T) => IO<B>): IO<B> {
+    return new IO(() => f(this.eval()).eval());
+  }
+
+  asyncFlatMap<B>(f: (val: T) => IO<Promise<B>>): IO<Promise<B>> {
+    return new IO(async () => f(await this.eval()).eval());
   }
 
   eval(): T {
@@ -142,5 +154,5 @@ class IO<T> extends Monad<Effect<T>> {
 export default {
   Maybe,
   Either,
-  IO
+  IO,
 };
