@@ -78,10 +78,13 @@ const getDataThatMayBeUndefined = (): Object | undefined => {
 
 const doubleAge = (x: any) => ({ ...x, age: x.age * 2 });
 
+const maybeDoubleAge = (x: any) => Maybe.of({ ...x, age: x.age * 2 });
+
 const data = cond(isUndefined, Nothing, Just)(getDataThatMayBeUndefined());
 log(data); // => Just [object Object] | Nothing
 
 data
   .map(doubleAge)
+  .flatMap(maybeDoubleAge)
   .map(doubleAge)
-  .map((x: any) => log(x.age)); // => 84
+  .map((x: any) => log(x.age)); // => 168

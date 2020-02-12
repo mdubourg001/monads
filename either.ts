@@ -36,6 +36,8 @@ log(e); // => Left 42
 
 const double = (x: number) => x * 2;
 
+const eitherDouble = (x: number) => Either.of(x * 2);
+
 const right = Right(10).map(double);
 log(right); // => Right 20
 
@@ -63,8 +65,9 @@ log(data); // => Right 42 | Left "Hello World" | Left true
 
 data
   .map(double)
+  .flatMap(eitherDouble)
   .map(double)
   .either(
     (x: any) => error(`Value of type '${typeof x}' isn't accepted.`),
-    log,
+    log, // => 336
   );

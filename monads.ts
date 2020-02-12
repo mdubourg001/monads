@@ -1,5 +1,7 @@
 abstract class Monad<T> {
   protected value: T;
+  public abstract map(f: Function): Monad<T>;
+  public abstract flatMap(f: Function): Monad<T>;
 }
 
 // -----
@@ -24,8 +26,12 @@ class Maybe<T> extends Monad<T> {
     return Maybe.Just(val);
   }
 
-  map<B>(f: (val: T) => B): Maybe<T | B> {
+  map<B>(f: (val: T) => T | B): Maybe<T | B> {
     return this.isNothing() ? this : new Maybe(f(this.value));
+  }
+
+  flatMap<B>(f: (val: T) => Maybe<T | B>): Maybe<T | B> {
+    return this.isNothing() ? this : f(this.value);
   }
 
   join(): T {
@@ -75,8 +81,12 @@ class Either<T> extends Monad<T> {
     return new Either(val);
   }
 
-  map<B>(f: (val: T) => B): Either<T | B> {
-    return this.t === EitherType.Left ? this : new Either(f(this.value));
+  map<B>(f: (val: T) => T | B): Either<T | B> {
+    return this.t === EitherType.Left ? this : Either.of(f(this.value));
+  }
+
+  flatMap<B>(f: (val: T) => Either<T | B>): Either<T | B> {
+    return this.t === EitherType.Left ? this : f(this.value);
   }
 
   either<B>(lmap: (val: T) => B, rmap: (val: T) => B): B {
@@ -126,19 +136,19 @@ class IO<T> extends Monad<Effect<T>> {
     return new IO(val);
   }
 
-  map<B>(f: (val: T) => B): IO<B> {
+  map<B>(f: (val: T) => T | B): IO<T | B> {
     return new IO(() => f(this.eval()));
   }
 
-  asyncMap<B>(f: (val: T) => Promise<B>): IO<Promise<B>> {
+  asyncMap<B>(f: (val: T) => Promise<T | B>): IO<Promise<T | B>> {
     return new IO(async () => f(await this.eval()));
   }
 
-  flatMap<B>(f: (val: T) => IO<B>): IO<B> {
+  flatMap<B>(f: (val: T) => IO<T | B>): IO<T | B> {
     return new IO(() => f(this.eval()).eval());
   }
 
-  asyncFlatMap<B>(f: (val: T) => IO<Promise<B>>): IO<Promise<B>> {
+  asyncFlatMap<B>(f: (val: T) => IO<Promise<T | B>>): IO<Promise<T | B>> {
     return new IO(async () => f(await this.eval()).eval());
   }
 
