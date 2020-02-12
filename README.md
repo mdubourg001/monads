@@ -1,4 +1,4 @@
-**Here are TypeScript implementations of well-known monads.**
+**Here are TypeScript implementations of some well-known monads.**
 
 _If you want to know about the basics of Monads, read [this excellent article](http://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)._
 
