@@ -1,4 +1,4 @@
-import Monads from "./monads";
+import Monads from './monads';
 
 const { Maybe } = Monads;
 
@@ -6,13 +6,19 @@ const { Maybe } = Monads;
 // utils
 // -----
 
-const log = (...args: any[]) => console.log(`=> ${args.join(" ")}`);
+const log = (...args: any[]) => console.log(`=> ${args.join(' ')}`);
 
+/**
+ * calls and returns the result of either 'iftrue' or 'iffalse' functions
+ * based on the result of the pred function evalutation
+ */
 const cond = (
   pred: (val: any) => boolean,
   iftrue: (val: any) => any,
-  iffalse: (val: any) => any
+  iffalse: (val: any) => any,
 ) => (val: any) => (pred(val) ? iftrue(val) : iffalse(val));
+
+const isUndefined = (x: any) => x === undefined;
 
 // -----
 // examples
@@ -61,23 +67,21 @@ const getDataThatMayBeUndefined = (): Object | undefined => {
   switch (true) {
     case r <= 0.5:
       return {
-        firstname: "John",
-        lastname: "Doe",
-        age: 21
+        firstname: 'John',
+        lastname: 'Doe',
+        age: 21,
       };
     case r > 0.5:
       return undefined;
   }
 };
 
-const isUndefined = (x: any) => x === undefined;
-
 const doubleAge = (x: any) => ({ ...x, age: x.age * 2 });
 
 const data = cond(isUndefined, Nothing, Just)(getDataThatMayBeUndefined());
 log(data); // => Just [object Object] | Nothing
 
-const r = data
+data
   .map(doubleAge)
   .map(doubleAge)
   .map((x: any) => log(x.age)); // => 84
