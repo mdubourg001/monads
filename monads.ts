@@ -161,8 +161,32 @@ class IO<T> extends Monad<Effect<T>> {
   }
 }
 
+// -----
+// reader monad
+// -----
+
+type Dependent = (...args: any[]) => any;
+
+class Reader extends Monad<Dependent> {
+  constructor(val: Dependent) {
+    super();
+    this.value = val;
+  }
+
+  static of(val: Dependent): Reader {
+    return new Reader(val);
+  }
+
+  map(f: (val: any) => any): Reader {}
+
+  flatMap(f: (val: any) => Reader): Reader {}
+
+  run(...args: any[]): any {}
+}
+
 export default {
   Maybe,
   Either,
   IO,
+  Reader,
 };
