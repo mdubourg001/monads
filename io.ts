@@ -10,24 +10,26 @@ const { IO } = Monads;
 
 const log = (...args: any[]) => console.log(`=> ${args.join(' ')}`);
 
-const identity = (x: any): any => x;
-
-const pipe = (...fns: Function[]): Function =>
-  fns.reduce(
-    (prevFn, nextFn) => (...args) => nextFn(prevFn(...args)),
-    identity,
-  );
-
 const tapLog = (x: any): any => {
   log(x);
-  return identity(x);
+  return x;
+};
+
+const randBetween = (...args: Array<any>): any => {
+  const rand = Math.random();
+  const step = 1 / args.length;
+  return args.find((a, index) => {
+    if (rand >= index * step && rand < (index + 1) * step) return a;
+  });
 };
 
 // -----
 // examples
 // -----
 
+// -----
 // sync usage
+// -----
 
 const readdirSyncIO = (...args: any[]) => IO.of(() => fs.readdirSync(...args));
 const readFileSyncIO = (...args: any[]) =>
@@ -45,22 +47,46 @@ const countAndWriteFilesWithExt = (ext: string): IO<string> =>
 
 log(countAndWriteFilesWithExt('.json').eval());
 
-// async usage
+// -----
+// async usage with error handling
+// -----
 
-const fetchDataIO = () => IO.of(() => Promise.resolve(42));
-const fetchMoreDataIO = () => IO.of(() => Promise.resolve('Am some API data!'));
+const unsafefetchDataIO = () =>
+  IO.of(
+    randBetween(
+      () => tapLog('1 worked') && Promise.resolve({ status: 200, data: 10 }),
+      () =>
+        tapLog('1 failed') &&
+        Promise.reject({ status: 500, error: 'Internal server error.' }),
+    ),
+  ); // same chances to fail or succeed ;
 
-const asyncTasksMess = fetchDataIO()
-  .asyncMap(data => data * 2)
+const unsafefetchMoreDataIO = () =>
+  IO.of(
+    randBetween(
+      () =>
+        tapLog('2 worked') &&
+        Promise.resolve({ status: 200, data: 'Am some API data' }),
+      () =>
+        tapLog('2 failed') &&
+        Promise.reject({ status: 500, error: 'Internal server error.' }),
+    ),
+  ); // same chances to fail or succeed ;;
+
+const asyncTasksMess = unsafefetchDataIO()
+  .asyncMap(res => ({ ...res, data: res.data * 2 }))
   .asyncFlatMap((data: any) =>
     writeFileSyncIO(`data.txt`, JSON.stringify(data), 'utf8'),
   )
   .asyncFlatMap(() => readFileSyncIO(`data.txt`, 'utf8'))
-  .asyncMap(log) // => 84
-  .asyncFlatMap(() => fetchMoreDataIO())
+  .asyncMap(log) // => { status: 200, data: 20 }
+  .asyncFlatMap(() => unsafefetchMoreDataIO())
   .asyncFlatMap((data: any) =>
     writeFileSyncIO(`data.txt`, JSON.stringify(data), 'utf8'),
   )
   .asyncFlatMap(() => readFileSyncIO(`data.txt`, 'utf8'));
 
-asyncTasksMess.eval().then(log); // => 'Am some API data!'
+asyncTasksMess
+  .eval()
+  .then(log) // => { status: 200, data: "Am some API data" }
+  .catch(e => log(e.error)); // => Internal server error.
